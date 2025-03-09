@@ -1,109 +1,94 @@
 import { IStorage } from "./types";
 import { 
-  User, InsertUser,
-  Invoice, expenses, budgets,
-  Expense, Budget
+  users, invoices, expenses, budgets,
+  type User, type InsertUser,
+  type Invoice, type Expense, type Budget
 } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
-import { randomBytes } from "crypto";
+import connectPg from "connect-pg-simple";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private invoices: Map<number, Invoice>;
-  private expenses: Map<number, Expense>;
-  private budgets: Map<number, Budget>;
-  private currentId: { [key: string]: number };
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.invoices = new Map();
-    this.expenses = new Map();
-    this.budgets = new Map();
-    this.currentId = {
-      users: 1,
-      invoices: 1,
-      expenses: 1,
-      budgets: 1
-    };
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000
+    this.sessionStore = new PostgresSessionStore({
+      createTableIfMissing: true,
+      pool: db.client,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId.users++;
-    const user = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getInvoicesByUserId(userId: number): Promise<Invoice[]> {
-    return Array.from(this.invoices.values()).filter(
-      (invoice) => invoice.userId === userId
-    );
+    return db.select().from(invoices).where(eq(invoices.userId, userId));
   }
 
   async createInvoice(userId: number, data: Omit<Invoice, "id" | "userId" | "createdAt">): Promise<Invoice> {
-    const id = this.currentId.invoices++;
-    const invoice = {
-      ...data,
-      id,
-      userId,
-      createdAt: new Date()
-    };
-    this.invoices.set(id, invoice);
+    const [invoice] = await db
+      .insert(invoices)
+      .values({
+        ...data,
+        userId,
+        createdAt: new Date(),
+      })
+      .returning();
     return invoice;
   }
 
   async getExpensesByUserId(userId: number): Promise<Expense[]> {
-    return Array.from(this.expenses.values()).filter(
-      (expense) => expense.userId === userId
-    );
+    return db.select().from(expenses).where(eq(expenses.userId, userId));
   }
 
   async createExpense(userId: number, data: Omit<Expense, "id" | "userId" | "createdAt">): Promise<Expense> {
-    const id = this.currentId.expenses++;
-    const expense = {
-      ...data,
-      id,
-      userId,
-      createdAt: new Date()
-    };
-    this.expenses.set(id, expense);
+    const [expense] = await db
+      .insert(expenses)
+      .values({
+        ...data,
+        userId,
+        createdAt: new Date(),
+      })
+      .returning();
     return expense;
   }
 
   async getBudgetsByUserIdAndMonth(userId: number, month: number, year: number): Promise<Budget[]> {
-    return Array.from(this.budgets.values()).filter(
-      (budget) => 
-        budget.userId === userId && 
-        budget.month === month &&
-        budget.year === year
-    );
+    return db
+      .select()
+      .from(budgets)
+      .where(
+        and(
+          eq(budgets.userId, userId),
+          eq(budgets.month, month),
+          eq(budgets.year, year)
+        )
+      );
   }
 
   async createBudget(userId: number, data: Omit<Budget, "id" | "userId">): Promise<Budget> {
-    const id = this.currentId.budgets++;
-    const budget = {
-      ...data,
-      id,
-      userId
-    };
-    this.budgets.set(id, budget);
+    const [budget] = await db
+      .insert(budgets)
+      .values({
+        ...data,
+        userId,
+      })
+      .returning();
     return budget;
   }
 
@@ -119,4 +104,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
