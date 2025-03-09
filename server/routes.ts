@@ -43,11 +43,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Budgets
   app.get("/api/budgets", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    // Get current month and year as defaults
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
     const query = z.object({
-      month: z.string().transform(x => parseInt(x)),
-      year: z.string().transform(x => parseInt(x)),
+      month: z.string().optional().transform(x => parseInt(x || currentMonth.toString())),
+      year: z.string().optional().transform(x => parseInt(x || currentYear.toString())),
     }).parse(req.query);
-    
+
     const budgets = await storage.getBudgetsByUserIdAndMonth(
       req.user.id, 
       query.month,
