@@ -1,0 +1,71 @@
+Key Objectives:
+
+Unified SaaS Platform with modular AI-powered tools, specifically focusing first on tools such as invoicing, expense management, and budgeting (e.g., invoice creator, budget tracker, expense tracker).
+
+Initial MVP: A simple invoicing and budgeting SaaS app with basic AI-driven assistance using free/open-source models.
+
+Tech Stack (Recommended for a beginner):
+
+Backend: Python with Flask
+
+Frontend: HTML/CSS (Bootstrap or Tailwind CSS for UI)
+
+Database: SQLite (local testing), MongoDB Atlas free-tier for deployment
+
+AI integration: Hugging Face free-tier/open-source models
+
+MVP Features:
+
+Phase 1: Basic Flask Web App
+
+Set up Flask server with route / displaying "Welcome to Brandon Pro AI Suite!"
+
+Basic user authentication (/signup, /login) using hashed passwords.
+
+SQLite database setup for local testing.
+
+Phase 2: Budget and Invoice Management Module
+
+Invoices and budgeting database schema setup.
+
+Routes:
+
+/invoices to create and manage invoices.
+
+/expenses for tracking expenses.
+
+/budget for monthly budgeting and tracking.
+
+Phase 2: Introduce Basic AI Assistance (Free tier)
+
+Endpoint: /ai/generate-invoice-description
+
+Users input brief invoice details, and the app returns an AI-generated, professional description.
+
+Integrate Hugging Face free-tier/open-source API for AI-driven text generation.
+
+Phase 3: Deployment
+
+Step-by-step instructions to deploy the app on Cloudways hosting.
+
+Configure HTTPS using Cloudways built-in Let's Encrypt.
+
+Instructions for deploying directly from GitHub.
+
+Deliverables for This Prompt:
+
+Well-commented Flask Python code clearly demonstrating routing, user authentication, database usage, and AI integration.
+
+Simple frontend built with Bootstrap or Tailwind CSS.
+
+SQLite database setup scripts.
+
+requirements.txt file with all necessary dependencies.
+
+Detailed README.md with:
+
+Setup instructions (local environment and Cloudways deployment)
+
+User guide for MVP functionality
+
+Resources for free APIs, libraries, and relevant beginner tutorials
