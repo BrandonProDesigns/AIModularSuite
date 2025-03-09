@@ -7,10 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, MoreVertical } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Download, Send, CurrencyIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function InvoicesPage() {
   const { toast } = useToast();
@@ -50,6 +57,65 @@ export default function InvoicesPage() {
       });
     }
   });
+
+  const sendInvoiceMutation = useMutation({
+    mutationFn: async ({ id, email }: { id: number; email: string }) => {
+      const res = await apiRequest("POST", `/api/invoices/${id}/send`, { email });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Invoice sent successfully"
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleDownloadPDF = async (invoiceId: number) => {
+    try {
+      const response = await fetch(`/api/invoices/${invoiceId}/pdf`, {
+        credentials: 'include'
+      });
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${invoiceId}.pdf`;
+      a.click();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCurrencyConvert = async (invoiceId: number, currency: string) => {
+    try {
+      const response = await fetch(`/api/invoices/${invoiceId}/convert?currency=${currency}`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      toast({
+        title: "Currency Conversion",
+        description: `${data.originalAmount} USD = ${data.convertedAmount.toFixed(2)} ${currency}`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Currency conversion failed",
+        variant: "destructive"
+      });
+    }
+  };
 
   const generateDescriptionMutation = useMutation({
     mutationFn: async (details: string) => {
@@ -172,11 +238,43 @@ export default function InvoicesPage() {
                           <h3 className="font-semibold">{invoice.customerName}</h3>
                           <p className="text-sm text-slate-500">{invoice.description}</p>
                         </div>
-                        <div className="text-right">
-                          <div className="font-bold">${invoice.amount}</div>
-                          <div className="text-sm text-slate-500">
-                            Due: {new Date(invoice.dueDate).toLocaleDateString()}
+                        <div className="flex items-start gap-2">
+                          <div className="text-right">
+                            <div className="font-bold">${invoice.amount}</div>
+                            <div className="text-sm text-slate-500">
+                              Due: {new Date(invoice.dueDate).toLocaleDateString()}
+                            </div>
                           </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => handleDownloadPDF(invoice.id)}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                const email = prompt("Enter recipient email:");
+                                if (email) {
+                                  sendInvoiceMutation.mutate({ id: invoice.id, email });
+                                }
+                              }}>
+                                <Send className="h-4 w-4 mr-2" />
+                                Send via Email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleCurrencyConvert(invoice.id, 'EUR')}>
+                                <CurrencyIcon className="h-4 w-4 mr-2" />
+                                Convert to EUR
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleCurrencyConvert(invoice.id, 'GBP')}>
+                                <CurrencyIcon className="h-4 w-4 mr-2" />
+                                Convert to GBP
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                       <div className="flex justify-between items-center text-sm">
