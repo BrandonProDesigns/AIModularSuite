@@ -38,6 +38,12 @@ export const budgets = pgTable("budgets", {
   year: integer("year").notNull(),
 });
 
+export const members = pgTable("members", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  avatarUrl: text("avatar_url"),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -60,8 +66,14 @@ export const insertBudgetSchema = createInsertSchema(budgets).omit({
   userId: true,
 });
 
+export const insertMemberSchema = createInsertSchema(members).omit({
+  id: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Invoice = typeof invoices.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
 export type Budget = typeof budgets.$inferSelect;
+export type Member = typeof members.$inferSelect;
+export type InsertMember = z.infer<typeof insertMemberSchema>;
