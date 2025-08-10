@@ -76,7 +76,10 @@
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
     "zod": "^3.23.8",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^3.4.0",
+    "@supabase/supabase-js": "^2.45.1",
+    "papaparse": "^5.4.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.0.8",

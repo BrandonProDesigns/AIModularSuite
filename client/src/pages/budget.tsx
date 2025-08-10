@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertExpenseSchema, insertBudgetSchema, Expense, Budget } from "@shared/schema";
+import { insertExpenseSchema, insertBudgetSchema, Expense, Budget, Category } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,17 +12,7 @@ import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-const EXPENSE_CATEGORIES = [
-  "Housing",
-  "Transportation",
-  "Food",
-  "Utilities",
-  "Insurance",
-  "Healthcare",
-  "Entertainment",
-  "Other"
-];
+import { useEffect } from "react";
 
 export default function BudgetPage() {
   const { toast } = useToast();
@@ -35,7 +25,7 @@ export default function BudgetPage() {
     defaultValues: {
       description: "",
       amount: 0,
-      category: "Other",
+      category: "",
       date: currentDate.toISOString().split("T")[0]
     }
   });
@@ -43,7 +33,7 @@ export default function BudgetPage() {
   const budgetForm = useForm({
     resolver: zodResolver(insertBudgetSchema),
     defaultValues: {
-      category: "Other",
+      category: "",
       amount: 0,
       month: currentMonth,
       year: currentYear
@@ -57,6 +47,18 @@ export default function BudgetPage() {
   const { data: budgets = [], isLoading: isLoadingBudgets } = useQuery<Budget[]>({
     queryKey: ["/api/budgets", { month: currentMonth, year: currentYear }]
   });
+
+  const { data: categories = [], isLoading: isLoadingCategories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"]
+  });
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      const first = categories[0].name;
+      if (!expenseForm.getValues().category) expenseForm.setValue("category", first);
+      if (!budgetForm.getValues().category) budgetForm.setValue("category", first);
+    }
+  }, [categories]);
 
   const createExpenseMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -103,14 +105,14 @@ export default function BudgetPage() {
   });
 
   // Prepare data for chart
-  const chartData = EXPENSE_CATEGORIES.map(category => {
+  const chartData = categories.map(cat => {
     const totalExpenses = expenses
-      .filter(e => e.category === category)
+      .filter(e => e.category === cat.name)
       .reduce((sum, e) => sum + Number(e.amount), 0);
-    
-    const budget = budgets.find(b => b.category === category);
+
+    const budget = budgets.find(b => b.category === cat.name);
     return {
-      category,
+      category: cat.name,
       expenses: totalExpenses,
       budget: budget ? Number(budget.amount) : 0
     };
@@ -179,9 +181,9 @@ export default function BudgetPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {EXPENSE_CATEGORIES.map(category => (
-                              <SelectItem key={category} value={category}>
-                                {category}
+                            {categories.map(cat => (
+                              <SelectItem key={cat.id} value={cat.name}>
+                                {cat.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -232,9 +234,9 @@ export default function BudgetPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {EXPENSE_CATEGORIES.map(category => (
-                              <SelectItem key={category} value={category}>
-                                {category}
+                            {categories.map(cat => (
+                              <SelectItem key={cat.id} value={cat.name}>
+                                {cat.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

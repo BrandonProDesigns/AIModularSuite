@@ -5,7 +5,8 @@ import { storage } from "./storage";
 import {
   insertInvoiceSchema,
   insertExpenseSchema,
-  insertBudgetSchema
+  insertBudgetSchema,
+  insertCategorySchema
 } from "@shared/schema";
 import { z } from "zod";
 import { generateInvoicePDF } from './services/pdf-generator';
@@ -113,6 +114,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const data = insertExpenseSchema.parse(req.body);
     const expense = await storage.createExpense(req.user.id, data);
     res.status(201).json(expense);
+  });
+
+  // Categories
+  app.get("/api/categories", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const categories = await storage.getCategoriesByUserId(req.user.id);
+    res.json(categories);
+  });
+
+  app.post("/api/categories", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const data = insertCategorySchema.parse(req.body);
+    const category = await storage.createCategory(req.user.id, data);
+    res.status(201).json(category);
   });
 
   // Budgets

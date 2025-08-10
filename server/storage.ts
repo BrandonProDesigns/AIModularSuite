@@ -1,8 +1,9 @@
 import { IStorage } from "./types";
-import { 
-  users, invoices, expenses, budgets,
+import {
+  users, invoices, expenses, budgets, categories,
   type User, type InsertUser,
-  type Invoice, type Expense, type Budget
+  type Invoice, type Expense, type Budget,
+  type Category, type InsertCategory
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -90,6 +91,21 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return budget;
+  }
+
+  async getCategoriesByUserId(userId: number): Promise<Category[]> {
+    return db.select().from(categories).where(eq(categories.userId, userId));
+  }
+
+  async createCategory(userId: number, data: InsertCategory): Promise<Category> {
+    const [category] = await db
+      .insert(categories)
+      .values({
+        ...data,
+        userId,
+      })
+      .returning();
+    return category;
   }
 
   async generateInvoiceDescription(details: string): Promise<string> {

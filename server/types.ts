@@ -1,4 +1,4 @@
-import { User, InsertUser, Invoice, Expense, Budget } from "@shared/schema";
+import { User, InsertUser, Invoice, Expense, Budget, Category, InsertCategory } from "@shared/schema";
 import { Store } from "express-session";
 
 export interface IStorage {
@@ -18,6 +18,10 @@ export interface IStorage {
   // Budget management
   getBudgetsByUserIdAndMonth(userId: number, month: number, year: number): Promise<Budget[]>;
   createBudget(userId: number, data: Omit<Budget, "id" | "userId">): Promise<Budget>;
+
+  // Category management
+  getCategoriesByUserId(userId: number): Promise<Category[]>;
+  createCategory(userId: number, data: InsertCategory): Promise<Category>;
 
   // AI features
   generateInvoiceDescription(details: string): Promise<string>;
