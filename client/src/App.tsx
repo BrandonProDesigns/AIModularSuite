@@ -9,6 +9,8 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import InvoicesPage from "@/pages/invoices";
 import BudgetPage from "@/pages/budget";
+import GoalsPage from "@/pages/Goals";
+import GoalDetail from "@/pages/GoalDetail";
 
 function Router() {
   return (
@@ -16,6 +18,8 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/budget" component={BudgetPage} />
+      <ProtectedRoute path="/goals" component={GoalsPage} />
+      <ProtectedRoute path="/goals/:id" component={GoalDetail} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

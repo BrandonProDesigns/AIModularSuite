@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, decimal, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -38,6 +38,17 @@ export const budgets = pgTable("budgets", {
   year: integer("year").notNull(),
 });
 
+export const goals = pgTable("goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  name: text("name").notNull(),
+  targetAmount: decimal("target_amount").notNull(),
+  currentAmount: decimal("current_amount").notNull().default("0"),
+  deadline: timestamp("deadline").notNull(),
+  breakdown: json("breakdown").$type<Record<string, number>>().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -60,8 +71,17 @@ export const insertBudgetSchema = createInsertSchema(budgets).omit({
   userId: true,
 });
 
+export const insertGoalSchema = createInsertSchema(goals).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  currentAmount: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Invoice = typeof invoices.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
 export type Budget = typeof budgets.$inferSelect;
+export type Goal = typeof goals.$inferSelect;
+export type InsertGoal = z.infer<typeof insertGoalSchema>;

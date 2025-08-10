@@ -5,7 +5,8 @@ import { storage } from "./storage";
 import {
   insertInvoiceSchema,
   insertExpenseSchema,
-  insertBudgetSchema
+  insertBudgetSchema,
+  insertGoalSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { generateInvoicePDF } from './services/pdf-generator';
@@ -142,6 +143,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const data = insertBudgetSchema.parse(req.body);
     const budget = await storage.createBudget(req.user.id, data);
     res.status(201).json(budget);
+  });
+
+  // Goals
+  app.get("/api/goals", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const goals = await storage.getGoalsByUserId(req.user.id);
+    res.json(goals);
+  });
+
+  app.post("/api/goals", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const data = insertGoalSchema.parse(req.body);
+    const goal = await storage.createGoal(req.user.id, {
+      ...data,
+      currentAmount: "0",
+    });
+    res.status(201).json(goal);
+  });
+
+  app.get("/api/goals/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const goal = await storage.getGoalById(req.user.id, parseInt(req.params.id));
+    if (!goal) return res.sendStatus(404);
+    res.json(goal);
+  });
+
+  app.put("/api/goals/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const schema = insertGoalSchema.extend({ currentAmount: z.string().optional() }).partial();
+    const data = schema.parse(req.body);
+    const goal = await storage.updateGoal(req.user.id, parseInt(req.params.id), data);
+    if (!goal) return res.sendStatus(404);
+    res.json(goal);
   });
 
   // AI Assistance

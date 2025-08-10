@@ -1,8 +1,8 @@
 import { IStorage } from "./types";
-import { 
-  users, invoices, expenses, budgets,
+import {
+  users, invoices, expenses, budgets, goals,
   type User, type InsertUser,
-  type Invoice, type Expense, type Budget
+  type Invoice, type Expense, type Budget, type Goal
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -90,6 +90,39 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return budget;
+  }
+
+  async getGoalsByUserId(userId: number): Promise<Goal[]> {
+    return db.select().from(goals).where(eq(goals.userId, userId));
+  }
+
+  async getGoalById(userId: number, id: number): Promise<Goal | undefined> {
+    const [goal] = await db
+      .select()
+      .from(goals)
+      .where(and(eq(goals.userId, userId), eq(goals.id, id)));
+    return goal;
+  }
+
+  async createGoal(userId: number, data: Omit<Goal, "id" | "userId" | "createdAt">): Promise<Goal> {
+    const [goal] = await db
+      .insert(goals)
+      .values({
+        ...data,
+        userId,
+        createdAt: new Date(),
+      })
+      .returning();
+    return goal;
+  }
+
+  async updateGoal(userId: number, id: number, data: Partial<Goal>): Promise<Goal | undefined> {
+    const [goal] = await db
+      .update(goals)
+      .set(data)
+      .where(and(eq(goals.userId, userId), eq(goals.id, id)))
+      .returning();
+    return goal;
   }
 
   async generateInvoiceDescription(details: string): Promise<string> {
