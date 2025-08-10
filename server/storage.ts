@@ -1,13 +1,22 @@
 import { IStorage } from "./types";
-import { 
-  users, invoices, expenses, budgets,
-  type User, type InsertUser,
-  type Invoice, type Expense, type Budget
+import {
+  users,
+  invoices,
+  expenses,
+  budgets,
+  tips,
+  type User,
+  type InsertUser,
+  type Invoice,
+  type Expense,
+  type Budget,
+  type Tip,
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
+import OpenAI from "openai";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -101,6 +110,29 @@ export class DatabaseStorage implements IStorage {
     ];
     const template = templates[Math.floor(Math.random() * templates.length)];
     return template.replace("{details}", details);
+  }
+
+  async generateSpendingTip(userId: number, type: string): Promise<Tip> {
+    const expenses = await this.getExpensesByUserId(userId);
+    const summary = expenses
+      .map((e) => `${e.category}: $${e.amount}`)
+      .join(", ");
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const prompt = `You are a financial coach. Based on the following spending summary: ${summary}. Provide a ${type}.`;
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+    });
+    const message =
+      completion.choices[0]?.message?.content?.trim() ||
+      "Keep tracking your expenses consistently.";
+
+    const [tip] = await db
+      .insert(tips)
+      .values({ type, message })
+      .returning();
+    return tip;
   }
 }
 
