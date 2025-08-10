@@ -7,7 +7,7 @@ import { PlusCircle, Receipt, Wallet, LineChart, LogOut } from "lucide-react";
 import { Invoice, Expense } from "@shared/schema";
 
 export default function HomePage() {
-  const { user, logoutMutation } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   const { data: invoices = [] } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"]
@@ -24,8 +24,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Welcome, {user?.username}</h1>
-          <Button variant="ghost" onClick={() => logoutMutation.mutate()}>
+          <h1 className="text-2xl font-bold">Welcome, {profile?.username ?? user?.email}</h1>
+          <Button variant="ghost" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
