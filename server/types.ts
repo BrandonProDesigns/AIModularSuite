@@ -1,4 +1,4 @@
-import { User, InsertUser, Invoice, Expense, Budget } from "@shared/schema";
+import { User, InsertUser, Invoice, Expense, Budget, Tip } from "@shared/schema";
 import { Store } from "express-session";
 
 export interface IStorage {
@@ -21,6 +21,7 @@ export interface IStorage {
 
   // AI features
   generateInvoiceDescription(details: string): Promise<string>;
+  generateSpendingTip(userId: number, type: string): Promise<Tip>;
 
   // Session store
   sessionStore: Store;

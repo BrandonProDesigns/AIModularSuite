@@ -144,6 +144,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(budget);
   });
 
+  // Tips
+  app.get("/api/tips", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { type } = z
+      .object({ type: z.enum(["daily", "weekly", "challenge"]) })
+      .parse(req.query);
+
+    try {
+      const tip = await storage.generateSpendingTip(req.user.id, type);
+      res.json(tip);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate tip" });
+    }
+  });
+
   // AI Assistance
   app.post("/api/ai/generate-description", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
