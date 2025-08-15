@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { PlusCircle, Receipt, Wallet, LineChart, LogOut } from "lucide-react";
+import { PlusCircle, Receipt, Wallet, LineChart, LogOut, Settings as SettingsIcon } from "lucide-react";
 import { Invoice, Expense } from "@shared/schema";
 
 export default function HomePage() {
@@ -25,10 +25,18 @@ export default function HomePage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Welcome, {user?.username}</h1>
-          <Button variant="ghost" onClick={() => logoutMutation.mutate()}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/settings">
+              <Button variant="ghost">
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            </Link>
+            <Button variant="ghost" onClick={() => logoutMutation.mutate()}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 

@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import InvoicesPage from "@/pages/invoices";
 import BudgetPage from "@/pages/budget";
+import SettingsPage from "@/pages/Settings";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/budget" component={BudgetPage} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
